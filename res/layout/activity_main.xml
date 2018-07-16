@@ -8,10 +8,123 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".MainActivity" >
 
+    <!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+    <CheckBox
+        android:id="@+id/box1_basic"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:text="@string/basic_test"
+        android:checked="true"/>
+    <!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+    <CheckBox
+        android:id="@+id/box1_performance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/box1_basic"
+        android:layout_alignParentLeft="true"
+        android:text="@string/performance_test"
+        android:checked="true"/>
+    <!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+    <TextView
+        android:id="@+id/textView_cycle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/cyclenumber"
+        android:layout_alignBottom="@+id/cyclenumber"
+        android:layout_alignParentLeft="true"
+        android:text="@string/cycle" />
+
+    <EditText
+        android:id="@+id/cyclenumber"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/box1_performance"
+        android:layout_toRightOf="@+id/textView_cycle"
+        android:layout_weight="1"
+        android:ems="5"
+        android:inputType="number"
+        android:text="@string/number" />
+
+    <!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+    <CheckBox
+        android:id="@+id/box1_reliability"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textView_cycle"
+        android:layout_alignParentLeft="true"
+        android:text="@string/reliability_test"
+        android:checked="true"/>
+    <!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+
+
+    <TextView
+        android:id="@+id/textView_path"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignBaseline="@+id/path_edit"
+        android:layout_alignBottom="@+id/path_edit"
+        android:layout_below="@+id/textView_testtime"
+        android:text="@string/flash_path" />
+
+    <EditText
+        android:id="@+id/path_edit"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/box1_reliability"
+        android:layout_toRightOf="@+id/textView_path"
+        android:editable="false"
+        android:ems="10"
+        android:singleLine="true" />
+
+    <Button
+        android:id="@+id/path"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/path_edit"
+        android:layout_toRightOf="@+id/path_edit"
+        android:text="@string/dot_dot_dot" />
+
+    <!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+    <TextView
+        android:id="@+id/textView_testtime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/testtimenumber"
+        android:layout_alignBottom="@+id/testtimenumber"
+        android:layout_alignParentLeft="true"
+        android:text="@string/test_time" />
+
+    <EditText
+        android:id="@+id/testtimenumber"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/path_edit"
+        android:layout_toRightOf="@+id/textView_testtime"
+        android:layout_weight="1"
+        android:ems="5"
+        android:inputType="number"
+        android:text="@string/number" >
+        <requestFocus />
+    </EditText>
+
+    <!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+
+
+    <Button
+        android:id="@+id/btn_start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/textView_path"
+        android:layout_below="@+id/testtimenumber"
+        android:text="@string/start" />
+
     <Button
         android:id="@+id/btn_stop"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/testtimenumber"
         android:layout_above="@+id/scrollView1"
         android:layout_toRightOf="@+id/btn_start"
         android:text="@string/stop" />
@@ -36,90 +149,5 @@
         </LinearLayout>
     </ScrollView>
 
-    <EditText
-        android:id="@+id/path_edit"
-        android:layout_width="250dp"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/textView_path"
-        android:layout_toRightOf="@+id/textView_path"
-        android:editable="false"
-        android:ems="10"
-        android:singleLine="true" />
-
-    <EditText
-        android:id="@+id/testtimenumber"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/textView_testtime"
-        android:layout_alignLeft="@+id/path_edit"
-        android:layout_weight="1"
-        android:ems="5"
-        android:inputType="number"
-        android:text="@string/number" >
-
-        <requestFocus />
-    </EditText>
-
-    <TextView
-        android:id="@+id/textView_unit"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/testtimenumber"
-        android:layout_toRightOf="@+id/testtimenumber"
-        android:text="@string/minutes" />
-
-    <Button
-        android:id="@+id/path"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/path_edit"
-        android:layout_toRightOf="@+id/path_edit"
-        android:text="@string/dot_dot_dot" />
-
-    <TextView
-        android:id="@+id/textView_path"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/textView_testtime"
-        android:layout_marginTop="34dp"
-        android:text="@string/flash_path" />
-
-    <TextView
-        android:id="@+id/textView_testtime"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:layout_marginTop="22dp"
-        android:text="@string/test_time" />
-
-    <EditText
-        android:id="@+id/cyclenumber"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/path_edit"
-        android:layout_toLeftOf="@+id/textView_unit"
-        android:layout_weight="1"
-        android:ems="5"
-        android:inputType="number"
-        android:text="@string/number" />
-
-    <TextView
-        android:id="@+id/textView_cycle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/cyclenumber"
-        android:layout_alignBottom="@+id/cyclenumber"
-        android:layout_toLeftOf="@+id/btn_stop"
-        android:text="@string/cycle" />
-
-    <Button
-        android:id="@+id/btn_start"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/textView_path"
-        android:layout_below="@+id/cyclenumber"
-        android:text="@string/start" />
 
 </RelativeLayout>
