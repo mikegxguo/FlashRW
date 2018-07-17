@@ -258,7 +258,9 @@ public class MainActivity extends Activity {
 
             if(mBasicTest) {
                 mState = true;
+                SendMyMessage(handler, 2, " ");
                 RunStep1(BasicPath);
+                SendMyMessage(handler, 2, " ");
             }
 
             if(mPerformanceTest) {
@@ -278,8 +280,10 @@ public class MainActivity extends Activity {
             }
 
             if(mReliabilityTest) {
+                SendMyMessage(handler, 2, " ");
                 RunStep3();
             }
+            SendMyMessage(handler, 2, " ");
 			RunningTest = -1;
 			mAllTestThread = null;
 			Message MSG = handler.obtainMessage();
@@ -316,8 +320,8 @@ public class MainActivity extends Activity {
             Random random;
             boolean bStop = false;
 
-			handler .removeMessages(0);
-			Message msg = handler.obtainMessage();
+			//handler .removeMessages(0);
+			//Message msg = handler.obtainMessage();
 			random = new Random();
 
 //			String strFileSize = "";
@@ -711,7 +715,7 @@ public class MainActivity extends Activity {
 					iWriteTime += (int)(lEndWrite - lBeginWrite);
 					if (i == iCy-1)
 					{
-						SendMyMessage(handler, 1, "Write "+strFileName+" with " + Integer.toString(iBufType)+
+						SendMyMessage(handler, 2, "Write "+strFileName+" with " + Integer.toString(iBufType)+
 								"KB buf  Time= "+ Integer.toString(iWriteTime)+"ms  Speed="+(mLFSize/iWriteTime)*1000/1024 + "KB/s  "
 								+ myTwoDecimal("" + ((mLFSize/iWriteTime)*1000/1024)/1024 +"."+((mLFSize/iWriteTime)*1000/1024)%1024) + "MB/S" );
 					}
@@ -733,28 +737,28 @@ public class MainActivity extends Activity {
 						{
 							if (i == iCy-1)
 							{
-								SendMyMessage(handler, 1, "Read "+strFileName+" with " + Integer.toString(iBufType)+
+								SendMyMessage(handler, 2, "Read "+strFileName+" with " + Integer.toString(iBufType)+
 										"KB buf  Time= "+ Integer.toString(iReadTime)+"ms  Speed="+(mLFSize/iReadTime)*1000/1024 + "KB/s  "
 										+ myTwoDecimal("" + ((mLFSize/iWriteTime)*1000/1024)/1024 +"."+((mLFSize/iWriteTime)*1000/1024)%1024) + "MB/S" );
 							}
 						}
 						else
 						{
-							SendMyMessage(handler, 1, "The "+ strFileName +" with "+ Integer.toString(iBufType)+"KB buf isn't correct.");
+							SendMyMessage(handler, 2, "The "+ strFileName +" with "+ Integer.toString(iBufType)+"KB buf isn't correct.");
 							bReturn = false;
 							break;
 						}
 					}
 					else
 					{
-						SendMyMessage(handler, 1, "The length of "+ strFileName +" with "+ Integer.toString(iBufType)+"KB buf isn't correct.");
+						SendMyMessage(handler, 2, "The length of "+ strFileName +" with "+ Integer.toString(iBufType)+"KB buf isn't correct.");
 						bReturn = false;
 						break;
 					}
 				}
 				else
 				{
-					SendMyMessage(handler, 1, "Write "+ strFileName +" with "+ Integer.toString(iBufType)+"KB buf fail.");
+					SendMyMessage(handler, 2, "Write "+ strFileName +" with "+ Integer.toString(iBufType)+"KB buf fail.");
 					bReturn = false;
 					break;
 				}
@@ -776,7 +780,7 @@ public class MainActivity extends Activity {
 				//msg.arg1 = 1;
 				//handler.sendMessage(msg);
 				int iTime =(int)(iEnd - iBegin);
-				SendMyMessage(handler, 1, "Write "+ fileName +" with "+ Integer.toString(bufType)+"KB buf  Time= "+
+				SendMyMessage(handler, 2, "Write "+ fileName +" with "+ Integer.toString(bufType)+"KB buf  Time= "+
 						Integer.toString((int)(iEnd - iBegin)) + "ms  Speed=" + (bufLength/iTime)*1000/1024 + "KB/s  "+
 						myTwoDecimal(""+((bufLength/iTime)*1000/1024)/1024+"."+((bufLength/iTime)*1000/1024)%1024)+"MB/s");
 
@@ -794,7 +798,7 @@ public class MainActivity extends Activity {
 
 					if(bSame){
 						iTime =(int)(iEnd - iBegin);
-						SendMyMessage(handler, 1, "Read "+ fileName +" with "+ Integer.toString(bufType)+"KB buf  Time= "+
+						SendMyMessage(handler, 2, "Read "+ fileName +" with "+ Integer.toString(bufType)+"KB buf  Time= "+
 								Integer.toString((int)(iEnd - iBegin)) + "ms  Speed=" + (bufLength/iTime)*1000/1024 + "KB/s  "+
 								myTwoDecimal(""+((bufLength/iTime)*1000/1024)/1024+"."+((bufLength/iTime)*1000/1024)%1024)+"MB/s");
 
@@ -804,7 +808,7 @@ public class MainActivity extends Activity {
 					}
 					else
 					{
-						SendMyMessage(handler, 1, "The "+ fileName +" with "+ Integer.toString(bufType)+"KB buf isn't correct.");
+						SendMyMessage(handler, 2, "The "+ fileName +" with "+ Integer.toString(bufType)+"KB buf isn't correct.");
 
 						//msg.obj = "The " + fileName + " with " + Integer.toString(bufType) + "K buf isn't correct.";
 						//msg.arg1 = 1;
@@ -814,7 +818,7 @@ public class MainActivity extends Activity {
 				}
 				else
 				{
-					SendMyMessage(handler, 1, "The length of "+ fileName +" with "+ Integer.toString(bufType)+"KB buf isn't correct.");
+					SendMyMessage(handler, 2, "The length of "+ fileName +" with "+ Integer.toString(bufType)+"KB buf isn't correct.");
 
 					//msg.obj = "The length of " + fileName + " with " + Integer.toString(bufType) + "K buf isn't correct.";
 					//msg.arg1 = 1;
@@ -825,7 +829,7 @@ public class MainActivity extends Activity {
 			}
 			else
 			{
-				SendMyMessage(handler, 1, "Write "+ fileName +" with "+ Integer.toString(bufType)+"KB buf fail.");
+				SendMyMessage(handler, 2, "Write "+ fileName +" with "+ Integer.toString(bufType)+"KB buf fail.");
 
 				//msg.obj = "Write " + fileName + " with " + Integer.toString(bufType) + "K buf fail.";
 				//msg.arg1 = 1;
@@ -905,7 +909,7 @@ public class MainActivity extends Activity {
             SendMyMessage(handler, 2, "====R/W Basic Test start");
 			if (mState) {
 				//Looper.prepare();
-				handler.removeMessages(0);
+				//handler.removeMessages(0);
 				//	Message msg = handler.obtainMessage();
 				random = new Random();
 				try
@@ -1162,17 +1166,14 @@ public class MainActivity extends Activity {
 			}
 			ReliabilityPath = FlashPathEdit.getText().toString()
 					+ "/RWReliability/";
-            SendMyMessage(handler, 2, "path: "+ReliabilityPath);
 			(new File(ReliabilityPath)).mkdirs();
 
             BasicPath = FlashPathEdit.getText().toString()
                     + "/RWBasic/";
-            SendMyMessage(handler, 2, "path: "+BasicPath);
             (new File(BasicPath)).mkdirs();
 
             PerformancePath = FlashPathEdit.getText().toString()
                     + "/RWPerformance/";
-            SendMyMessage(handler, 2, "path: "+PerformancePath);
             (new File(PerformancePath)).mkdirs();
 
 		}

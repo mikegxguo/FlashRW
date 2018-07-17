@@ -24,7 +24,7 @@
         android:layout_below="@+id/box1_basic"
         android:layout_alignParentLeft="true"
         android:text="@string/performance_test"
-        android:checked="true"/>
+        android:checked="false"/>
     <!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
     <TextView
         android:id="@+id/textView_cycle"
@@ -54,7 +54,7 @@
         android:layout_below="@+id/textView_cycle"
         android:layout_alignParentLeft="true"
         android:text="@string/reliability_test"
-        android:checked="true"/>
+        android:checked="false"/>
     <!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
 
 
