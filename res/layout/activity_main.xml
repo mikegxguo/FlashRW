@@ -111,14 +111,22 @@
 
     <!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
 
-
     <Button
-        android:id="@+id/btn_start"
+        android:id="@+id/btn_flash"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/textView_path"
+        android:layout_alignLeft="@+id/textView_testtime"
         android:layout_below="@+id/testtimenumber"
-        android:text="@string/start" />
+        android:text="@string/flash_test" />
+
+    <Button
+        android:id="@+id/btn_sd"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/testtimenumber"
+        android:layout_above="@+id/scrollView1"
+        android:layout_toRightOf="@+id/btn_flash"
+        android:text="@string/sd_test" />
 
     <Button
         android:id="@+id/btn_stop"
@@ -126,15 +134,24 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/testtimenumber"
         android:layout_above="@+id/scrollView1"
-        android:layout_toRightOf="@+id/btn_start"
+        android:layout_toRightOf="@+id/btn_sd"
         android:text="@string/stop" />
+
+    <!-- Button
+        android:id="@+id/btn_start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/testtimenumber"
+        android:layout_above="@+id/scrollView1"
+        android:layout_toRightOf="@+id/btn_stop"
+        android:text="@string/start" / -->
 
     <ScrollView
         android:id="@+id/scrollView1"
         android:layout_width="621dp"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/btn_start" >
+        android:layout_below="@+id/btn_flash" >
 
         <LinearLayout
             android:layout_width="wrap_content"

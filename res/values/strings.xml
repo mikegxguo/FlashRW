@@ -18,5 +18,7 @@
     <string name="basic_test">R/W Basic Test</string>
     <string name="performance_test">R/W Performance Test</string>
     <string name="reliability_test">R/W Reliability Test</string>
+    <string name="flash_test">FlashTest</string>
+    <string name="sd_test">SDTest</string>
 
 </resources>

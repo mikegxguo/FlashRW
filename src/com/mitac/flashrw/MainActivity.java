@@ -34,6 +34,11 @@ import android.widget.TextView;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.Toast;
+import android.content.Context;
+
+import android.os.storage.StorageManager;
+import android.os.storage.StorageVolume;
+
 
 public class MainActivity extends Activity {
 
@@ -46,6 +51,7 @@ public class MainActivity extends Activity {
 	private Button FlashPathButton;
 
 	private EditText FlashPathEdit;
+    private TextView mTextPath;
 
 	private EditText CyclenumEdit;
 
@@ -59,6 +65,10 @@ public class MainActivity extends Activity {
     private long mLFSize = 0;
     private int length = 1024 * 1024, iBufSize = 4*1024*1024, iCy = 0;
     private int mFileSize = 0, mSYFileSize = 0, iCurSize = 0;
+    private static String external_sdcard_path = "";
+    private StorageManager mStorageManager;
+    private Context mContext;
+    private boolean bStop = false;
 
 	private TextView mTextView01;
 	private ScrollView myScrollView;
@@ -67,8 +77,10 @@ public class MainActivity extends Activity {
 	private Handler handler;
 	public String LogfilePath;
 	public String strSystemTime;
-	private Button m_btnstart = null;
+	//private Button m_btnstart = null;
 	private Button m_btnstop = null;
+    private Button m_btnflash = null;
+    private Button m_btnsd = null;
 	private char bufW[];
 	private char bufR[];
 
@@ -93,10 +105,13 @@ public class MainActivity extends Activity {
 		// .detectLeakedClosableObjects().penaltyLog().penaltyDeath().build());
 
 		super.onCreate(savedInstanceState);
+        mContext = this;
+
 		setContentView(R.layout.activity_main);
 		mySelectPath();// select folder
 		strSystemTime = mGetSystemTime();
-		LogfilePath = "/mnt/sdcard/Auto_RW_log" + strSystemTime + ".txt";
+        (new File("/mnt/sdcard/StorageTest")).mkdirs();
+		LogfilePath = "/mnt/sdcard/StorageTest/Auto_RW_log" + strSystemTime + ".txt";
 		handler = new Handler(Looper.getMainLooper()) {// Looper.getMainLooper()
 
 			/*
@@ -125,8 +140,11 @@ public class MainActivity extends Activity {
 						TestResult = "";
 					}
 
-					m_btnstart.setEnabled(true);
+					//m_btnstart.setEnabled(true);
+                    m_btnflash.setEnabled(true);
+                    m_btnsd.setEnabled(true);
 					m_btnstop.setEnabled(false);
+                    bStop = false;
 
 				}
 			}
@@ -136,10 +154,15 @@ public class MainActivity extends Activity {
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
 				WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-		m_btnstart = (Button) findViewById(R.id.btn_start);
+		//m_btnstart = (Button) findViewById(R.id.btn_start);
 		m_btnstop = (Button) findViewById(R.id.btn_stop);
-		m_btnstart.setEnabled(true);
+        m_btnflash = (Button) findViewById(R.id.btn_flash);
+        m_btnsd = (Button) findViewById(R.id.btn_sd);
+		//m_btnstart.setEnabled(true);
+        m_btnflash.setEnabled(true);
+        m_btnsd.setEnabled(true);
 		m_btnstop.setEnabled(false);
+        //m_btnstart.setVisibility(View.INVISIBLE);
 
 		mTextView01 = (TextView) findViewById(R.id.myTextView01);
 		myScrollView = (ScrollView) findViewById(R.id.scrollView1);
@@ -147,7 +170,9 @@ public class MainActivity extends Activity {
 		CyclenumEdit = (EditText) findViewById(R.id.cyclenumber);
 		FlashtesttimeEdit = (EditText) findViewById(R.id.testtimenumber);
 
-		m_btnstart.setOnClickListener(new StartTest());
+		//m_btnstart.setOnClickListener(new StartTest());
+        m_btnflash.setOnClickListener(new FlashTest());
+        m_btnsd.setOnClickListener(new SDTest());
 		m_btnstop.setOnClickListener(new StopTest());
 
         box1_basic = (CheckBox) findViewById(R.id.box1_basic);
@@ -215,7 +240,9 @@ public class MainActivity extends Activity {
 
 
 			if (RunningTest == -1 && mAllTestThread == null) {
-				m_btnstart.setEnabled(false);
+				//m_btnstart.setEnabled(false);
+                m_btnflash.setEnabled(false);
+                m_btnsd.setEnabled(false);
 				m_btnstop.setEnabled(true);
 				RunningTest = 1;
 				mAllTestThread = new RunAlltestThead();
@@ -230,6 +257,104 @@ public class MainActivity extends Activity {
 
 		}
 	}
+
+
+    void SelectPath(String strSelectPath) {
+            String strTempPath = strSelectPath + "/StorageTest/";
+            (new File(strTempPath)).mkdirs();
+
+            ReliabilityPath = strSelectPath + "/StorageTest/RWReliability/";
+            (new File(ReliabilityPath)).mkdirs();
+
+            BasicPath = strSelectPath + "/StorageTest/RWBasic/";
+            (new File(BasicPath)).mkdirs();
+
+            PerformancePath = strSelectPath + "/StorageTest/RWPerformance/";
+            (new File(PerformancePath)).mkdirs();
+    }
+
+    public class FlashTest implements OnClickListener {
+        public void onClick(View v) {
+            if (CyclenumEdit.getText().toString().equals("") == true) {
+                Toast.makeText(MainActivity.this,
+                        "Please input cycle number!!!", Toast.LENGTH_LONG)
+                        .show();
+                return;
+            }
+
+            SelectPath("/mnt/sdcard");
+
+            cyclenum = Integer.parseInt(CyclenumEdit.getText().toString());
+            mBasicTest = box1_basic.isChecked();
+            mPerformanceTest = box1_performance.isChecked();
+            mReliabilityTest = box1_reliability.isChecked();
+
+            if (RunningTest == -1 && mAllTestThread == null) {
+                //m_btnstart.setEnabled(false);
+                m_btnflash.setEnabled(false);
+                m_btnsd.setEnabled(false);
+                m_btnstop.setEnabled(true);
+                RunningTest = 1;
+                mAllTestThread = new RunAlltestThead();
+                mAllTestThread.start();
+            }
+        }
+    }
+
+    void GetExternalSDPath() {
+        File path;
+        mStorageManager = StorageManager.from(mContext);
+        StorageVolume[] volumes = mStorageManager.getVolumeList();
+        Log.d("Storage", "volume length: "+volumes.length);
+        for (int ivolumes = 0; ivolumes < volumes.length; ivolumes++) {
+            path = new File(volumes[ivolumes].getPath());
+            Log.d("Storage","Trying to create file at - "+path+":: isRemovable="+ volumes[ivolumes].isRemovable()+
+                ", getDescription="+volumes[ivolumes].getDescription(mContext)+", isEmulated="+
+                volumes[ivolumes].isEmulated()+", isPrimary="+volumes[ivolumes].isPrimary());
+
+            //if(volumes[ivolumes].isPrimary() == true && volumes[ivolumes].isEmulated() == true)
+            //    default_sdcard_path = path.toString();
+
+            if(volumes[ivolumes].isRemovable() == true)
+                external_sdcard_path = path.toString();
+
+        }
+    }
+
+    public class SDTest implements OnClickListener {
+        public void onClick(View v) {
+            if (CyclenumEdit.getText().toString().equals("") == true) {
+                Toast.makeText(MainActivity.this,
+                        "Please input cycle number!!!", Toast.LENGTH_LONG)
+                        .show();
+                return;
+            }
+
+            GetExternalSDPath();
+            if(external_sdcard_path.equals("") == true) {
+                Toast.makeText(MainActivity.this,
+                        "Please insert SD card!!!", Toast.LENGTH_LONG)
+                        .show();
+                return;
+            }
+            SelectPath(external_sdcard_path);
+
+            cyclenum = Integer.parseInt(CyclenumEdit.getText().toString());
+            mBasicTest = box1_basic.isChecked();
+            mPerformanceTest = box1_performance.isChecked();
+            mReliabilityTest = box1_reliability.isChecked();
+
+            if (RunningTest == -1 && mAllTestThread == null) {
+                //m_btnstart.setEnabled(false);
+                m_btnflash.setEnabled(false);
+                m_btnsd.setEnabled(false);
+                m_btnstop.setEnabled(true);
+                RunningTest = 1;
+                mAllTestThread = new RunAlltestThead();
+                mAllTestThread.start();
+            }
+        }
+    }
 
 	void SendMyMessage(Handler msghandler, int type, String msg) {
 		Message MSG = msghandler.obtainMessage();
@@ -318,7 +443,6 @@ public class MainActivity extends Activity {
             FileWriter fileW;
             String str="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
             Random random;
-            boolean bStop = false;
 
 			//handler .removeMessages(0);
 			//Message msg = handler.obtainMessage();
@@ -904,7 +1028,6 @@ public class MainActivity extends Activity {
             char bufW[];
             char bufR[];
             int length = 1024 * 1024;
-            boolean bStop = false;
 
             SendMyMessage(handler, 2, "====R/W Basic Test start");
 			if (mState) {
@@ -972,11 +1095,11 @@ public class MainActivity extends Activity {
 
 					if(bReturn)
 					{
-						SendMyMessage(handler, 3, "Pass");
+						SendMyMessage(handler, 2, "Pass");
 					}
 					else
 					{
-						SendMyMessage(handler, 3, "Fail");
+						SendMyMessage(handler, 2, "Fail");
 					}
 
 				}
@@ -999,7 +1122,6 @@ public class MainActivity extends Activity {
 		char bufR[];
 		int length = 3 * 1024 * 1024;
 		int fileCount = 10;
-		boolean bStop = false;
 		boolean bReturn = true;
 
 		Flashtesttimenum = Integer.parseInt(FlashtesttimeEdit.getText()
@@ -1114,6 +1236,7 @@ public class MainActivity extends Activity {
 		public void onClick(View v) {
 			if (RunningTest != -1) {
 				RunningTest = -1;
+                bStop = true;
 				m_btnstop.setEnabled(false);
 				if (timer != null) {
 					timer.cancel();
@@ -1165,15 +1288,15 @@ public class MainActivity extends Activity {
 				return;
 			}
 			ReliabilityPath = FlashPathEdit.getText().toString()
-					+ "/RWReliability/";
+					+ "/StorageTest/RWReliability/";
 			(new File(ReliabilityPath)).mkdirs();
 
             BasicPath = FlashPathEdit.getText().toString()
-                    + "/RWBasic/";
+                    + "/StorageTest/RWBasic/";
             (new File(BasicPath)).mkdirs();
 
             PerformancePath = FlashPathEdit.getText().toString()
-                    + "/RWPerformance/";
+                    + "/StorageTest/RWPerformance/";
             (new File(PerformancePath)).mkdirs();
 
 		}
@@ -1181,6 +1304,7 @@ public class MainActivity extends Activity {
 	}
 
 	public void mySelectPath() {
+        mTextPath = (TextView) findViewById(R.id.textView_path);
 		FlashPathEdit = (EditText) findViewById(R.id.path_edit);
 		FlashPathButton = (Button) findViewById(R.id.path);
 		FlashPathButton.setOnClickListener(new Button.OnClickListener() {
@@ -1191,6 +1315,9 @@ public class MainActivity extends Activity {
 				startActivityForResult(intent, FlashPATH_RESULT_CODE);
 			}
 		});
+        mTextPath.setVisibility(View.GONE);
+        FlashPathEdit.setVisibility(View.GONE);
+        FlashPathButton.setVisibility(View.GONE);
 	}
 
 }
