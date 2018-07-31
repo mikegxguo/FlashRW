@@ -39,6 +39,12 @@ import android.content.Context;
 import android.os.storage.StorageManager;
 import android.os.storage.StorageVolume;
 
+import com.mitac.common.EmmcProperties;
+import com.mitac.common.ServiceStateCallback;
+import com.mitac.common.SystemApiClient;
+import com.mitac.common.exceptions.EmmcPropertiesException;
+import com.mitac.common.exceptions.SystemApiClientException;
+
 
 public class MainActivity extends Activity {
 
@@ -95,6 +101,60 @@ public class MainActivity extends Activity {
 	private RunAlltestThead mAllTestThread;
 	private int Currentcycle = 0;
 
+    private static String TAG = "Storage";
+    private SystemApiClient mSystemApiClient;
+    private boolean mServiceReady = false;
+    private int emmc_health = -1;
+
+    private void initSystemApiClient() {
+        if (mSystemApiClient == null) {
+            Log.d(TAG, "init System api client...");
+            mSystemApiClient = new SystemApiClient(getApplicationContext(), new ServiceStateCallback() {
+                @Override
+                public void serviceReady() {
+                    mServiceReady = true;
+                    //mStartAllTestButton.setEnabled(mServiceReady);
+                }
+            });
+
+            if (!mSystemApiClient.isServiceReady()) {
+                Log.d(TAG, "try to connect system api service...");
+                mSystemApiClient.connect();
+            } else {
+                Log.d(TAG, "system api service ready...");
+            }
+        } else {
+            Log.d(TAG, "no need to init system api client...");
+        }
+    }
+
+    private void removeSystemApiClient() {
+        if (mSystemApiClient != null) {
+            Log.d(TAG, "try to disconnect from system client service");
+            mSystemApiClient.disconnect();
+            mSystemApiClient = null;
+        }
+    }
+
+    private int testGetEmmcHealthStatusApi() {
+        //boolean isSuccess = false;
+        int value = -1;
+
+        try {
+            EmmcProperties.init(mSystemApiClient);
+            value = EmmcProperties.getEmmcHealthStatus();
+            //isSuccess = true;
+        } catch (EmmcPropertiesException e) {
+            e.printStackTrace();
+        } catch (SystemApiClientException e) {
+            e.printStackTrace();
+        }
+        //updateTexViewUiResult(mEmmcHealthTextView,
+        //        ResUtils.getResString(this, R.string.emmc_health),
+        //        Integer.toString(value));
+        return value;
+    }
+
 	public void onCreate(Bundle savedInstanceState) {
 		// StrictMode.setThreadPolicy(new
 		// StrictMode.ThreadPolicy.Builder().detectDiskReads()
@@ -108,6 +168,7 @@ public class MainActivity extends Activity {
         mContext = this;
 
 		setContentView(R.layout.activity_main);
+        //EmmcProperties.init();
 		mySelectPath();// select folder
 		strSystemTime = mGetSystemTime();
         (new File("/mnt/sdcard/StorageTest")).mkdirs();
@@ -211,6 +272,14 @@ public class MainActivity extends Activity {
 
 	}
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        initSystemApiClient();
+        emmc_health = testGetEmmcHealthStatusApi();
+    }
+
+    @Override
 	protected void onDestroy() {
 		RunningTest = -1;
 		if (timer != null) {
@@ -218,7 +287,9 @@ public class MainActivity extends Activity {
 			timer = null;
 		}
 		super.onDestroy();
+        removeSystemApiClient();
 	}
+
 
 	public class StartTest implements OnClickListener {
 		public void onClick(View v) {
@@ -409,6 +480,9 @@ public class MainActivity extends Activity {
                 RunStep3();
             }
             SendMyMessage(handler, 2, " ");
+            SendMyMessage(handler, 2, "Emmc health index(before test): "+emmc_health);
+            emmc_health = testGetEmmcHealthStatusApi();
+            SendMyMessage(handler, 2, "Emmc health index(after test): "+emmc_health);
 			RunningTest = -1;
 			mAllTestThread = null;
 			Message MSG = handler.obtainMessage();
@@ -1136,7 +1210,12 @@ public class MainActivity extends Activity {
 			int number = random.nextInt(62);// [0,62)
 			bufW[i] = str.charAt(number);
 		}
+        Currentcycle = 0;
 		while (!bStop && marktime2 - marktime1 <= Flashtesttimenum * 60000) {
+            Currentcycle++;
+            SendMyMessage(handler, 2, "\n#############Cycle:"+ Currentcycle + "#############");
+            SendMyMessage(handler, 2, " ");
+
 			marktime2 = SystemClock.uptimeMillis();
 			try {
 				for (int i = 0; i < fileCount; i++) {
@@ -1214,6 +1293,18 @@ public class MainActivity extends Activity {
 			SendMyMessage(handler, 2, "Fail");
 		}
 		delAllFile(ReliabilityPath);
+        Currentcycle = 30*Currentcycle;
+        if(Currentcycle>1024) {
+            Currentcycle = Currentcycle/1024;
+            if(Currentcycle>1024) {
+                Currentcycle = Currentcycle/1024;
+                SendMyMessage(handler, 2, "Total data written:"+Integer.toString(Currentcycle)+"TB");
+            } else {
+                SendMyMessage(handler, 2, "Total data written:"+Integer.toString(Currentcycle)+"GB");
+            }
+        } else {
+            SendMyMessage(handler, 2, "Total data written:"+Integer.toString(Currentcycle)+"MB");
+        }
 		SendMyMessage(handler, 2, "====R/W Reliability Test end");
 	}
 
