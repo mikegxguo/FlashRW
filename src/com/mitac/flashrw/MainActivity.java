@@ -276,7 +276,7 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         initSystemApiClient();
-        emmc_health = testGetEmmcHealthStatusApi();
+        //emmc_health = testGetEmmcHealthStatusApi();
     }
 
     @Override
@@ -451,6 +451,7 @@ public class MainActivity extends Activity {
 		public void run() {
 			super.run();
 			Currentcycle = 0;
+            emmc_health = testGetEmmcHealthStatusApi();
 
             if(mBasicTest) {
                 mState = true;
