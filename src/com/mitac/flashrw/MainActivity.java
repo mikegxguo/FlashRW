@@ -276,7 +276,6 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         initSystemApiClient();
-        //emmc_health = testGetEmmcHealthStatusApi();
     }
 
     @Override
@@ -451,7 +450,6 @@ public class MainActivity extends Activity {
 		public void run() {
 			super.run();
 			Currentcycle = 0;
-            emmc_health = testGetEmmcHealthStatusApi();
 
             if(mBasicTest) {
                 mState = true;
@@ -478,12 +476,29 @@ public class MainActivity extends Activity {
 
             if(mReliabilityTest) {
                 SendMyMessage(handler, 2, " ");
+                emmc_health = testGetEmmcHealthStatusApi();
                 RunStep3();
+
+                SendMyMessage(handler, 2, "Emmc health status(before test): "+emmc_health);
+
+                Currentcycle = 30*Currentcycle;
+                if(Currentcycle>1024) {
+                    Currentcycle = Currentcycle/1024;
+                    if(Currentcycle>1024) {
+                        Currentcycle = Currentcycle/1024;
+                        SendMyMessage(handler, 2, "Total data written:"+Integer.toString(Currentcycle)+"TB");
+                    } else {
+                        SendMyMessage(handler, 2, "Total data written:"+Integer.toString(Currentcycle)+"GB");
+                    }
+                } else {
+                    SendMyMessage(handler, 2, "Total data written:"+Integer.toString(Currentcycle)+"MB");
+                }
+
+                emmc_health = testGetEmmcHealthStatusApi();
+                SendMyMessage(handler, 2, "Emmc health status(after test): "+emmc_health);
             }
+
             SendMyMessage(handler, 2, " ");
-            SendMyMessage(handler, 2, "Emmc health index(before test): "+emmc_health);
-            emmc_health = testGetEmmcHealthStatusApi();
-            SendMyMessage(handler, 2, "Emmc health index(after test): "+emmc_health);
 			RunningTest = -1;
 			mAllTestThread = null;
 			Message MSG = handler.obtainMessage();
@@ -1294,18 +1309,6 @@ public class MainActivity extends Activity {
 			SendMyMessage(handler, 2, "Fail");
 		}
 		delAllFile(ReliabilityPath);
-        Currentcycle = 30*Currentcycle;
-        if(Currentcycle>1024) {
-            Currentcycle = Currentcycle/1024;
-            if(Currentcycle>1024) {
-                Currentcycle = Currentcycle/1024;
-                SendMyMessage(handler, 2, "Total data written:"+Integer.toString(Currentcycle)+"TB");
-            } else {
-                SendMyMessage(handler, 2, "Total data written:"+Integer.toString(Currentcycle)+"GB");
-            }
-        } else {
-            SendMyMessage(handler, 2, "Total data written:"+Integer.toString(Currentcycle)+"MB");
-        }
 		SendMyMessage(handler, 2, "====R/W Reliability Test end");
 	}
 
