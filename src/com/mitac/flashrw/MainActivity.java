@@ -105,6 +105,7 @@ public class MainActivity extends Activity {
     private SystemApiClient mSystemApiClient;
     private boolean mServiceReady = false;
     private int emmc_health = -1;
+    private boolean mSDTest = false;
 
     private void initSystemApiClient() {
         if (mSystemApiClient == null) {
@@ -353,6 +354,7 @@ public class MainActivity extends Activity {
             }
 
             SelectPath("/mnt/sdcard");
+            mSDTest = false;
 
             cyclenum = Integer.parseInt(CyclenumEdit.getText().toString());
             mBasicTest = box1_basic.isChecked();
@@ -408,6 +410,7 @@ public class MainActivity extends Activity {
                 return;
             }
             SelectPath(external_sdcard_path);
+            mSDTest = true;
 
             cyclenum = Integer.parseInt(CyclenumEdit.getText().toString());
             mBasicTest = box1_basic.isChecked();
@@ -476,10 +479,13 @@ public class MainActivity extends Activity {
 
             if(mReliabilityTest) {
                 SendMyMessage(handler, 2, " ");
-                emmc_health = testGetEmmcHealthStatusApi();
+                if(mSDTest) {
+                    emmc_health = testGetEmmcHealthStatusApi();
+                }
                 RunStep3();
-
-                SendMyMessage(handler, 2, "Emmc health status(before test): "+emmc_health);
+                if(mSDTest) {
+                    SendMyMessage(handler, 2, "Emmc health status(before test): "+emmc_health);
+                }
 
                 Currentcycle = 30*Currentcycle;
                 if(Currentcycle>1024) {
@@ -494,8 +500,10 @@ public class MainActivity extends Activity {
                     SendMyMessage(handler, 2, "Total data written:"+Integer.toString(Currentcycle)+"MB");
                 }
 
-                emmc_health = testGetEmmcHealthStatusApi();
-                SendMyMessage(handler, 2, "Emmc health status(after test): "+emmc_health);
+                if(mSDTest) {
+                    emmc_health = testGetEmmcHealthStatusApi();
+                    SendMyMessage(handler, 2, "Emmc health status(after test): "+emmc_health);
+                }
             }
 
             SendMyMessage(handler, 2, " ");
