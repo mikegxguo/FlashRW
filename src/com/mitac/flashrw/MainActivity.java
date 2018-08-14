@@ -479,11 +479,11 @@ public class MainActivity extends Activity {
 
             if(mReliabilityTest) {
                 SendMyMessage(handler, 2, " ");
-                if(mSDTest) {
+                if(!mSDTest) {
                     emmc_health = testGetEmmcHealthStatusApi();
                 }
                 RunStep3();
-                if(mSDTest) {
+                if(!mSDTest) {
                     SendMyMessage(handler, 2, "Emmc health status(before test): "+emmc_health);
                 }
 
@@ -500,7 +500,7 @@ public class MainActivity extends Activity {
                     SendMyMessage(handler, 2, "Total data written:"+Integer.toString(Currentcycle)+"MB");
                 }
 
-                if(mSDTest) {
+                if(!mSDTest) {
                     emmc_health = testGetEmmcHealthStatusApi();
                     SendMyMessage(handler, 2, "Emmc health status(after test): "+emmc_health);
                 }
