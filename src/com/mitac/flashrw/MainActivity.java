@@ -1198,7 +1198,6 @@ public class MainActivity extends Activity {
 		int fileCount = 10;
 		boolean bReturn = true;
         int total = 0;
-        int temp0, temp1, temp2;
 
 		Flashtesttimenum = Integer.parseInt(FlashtesttimeEdit.getText()
 				.toString());
@@ -1293,14 +1292,12 @@ public class MainActivity extends Activity {
             //print the total data written in every test cycle
             total = 30*Currentcycle;
             if(total>1024) {
-                temp0 = total/1024;//GB
-                temp1 = total%1024;//MB
-                if(temp0>1024) {
-                    temp2 = temp0/1024;//TB
-                    temp0 = temp0%1024;//GB
-                    SendMyMessage(handler, 2, "Total data written:"+Integer.toString(temp2)+"TB"+Integer.toString(temp0)+"GB"+Integer.toString(temp1)+"MB");
+                total = total/1024;
+                if(total>1024) {
+                    total = total/1024;
+                    SendMyMessage(handler, 2, "Total data written:"+Integer.toString(total)+"TB");
                 } else {
-                    SendMyMessage(handler, 2, "Total data written:"+Integer.toString(temp0)+"GB"+Integer.toString(temp1)+"MB");
+                    SendMyMessage(handler, 2, "Total data written:"+Integer.toString(total)+"GB");
                 }
             } else {
                 SendMyMessage(handler, 2, "Total data written:"+Integer.toString(total)+"MB");
