@@ -479,13 +479,7 @@ public class MainActivity extends Activity {
 
             if(mReliabilityTest) {
                 SendMyMessage(handler, 2, " ");
-                if(!mSDTest) {
-                    emmc_health = testGetEmmcHealthStatusApi();
-                }
                 RunStep3();
-                if(!mSDTest) {
-                    SendMyMessage(handler, 2, "Emmc health status(before test): "+emmc_health);
-                }
 
                 Currentcycle = 30*Currentcycle;
                 if(Currentcycle>1024) {
@@ -500,10 +494,6 @@ public class MainActivity extends Activity {
                     SendMyMessage(handler, 2, "Total data written:"+Integer.toString(Currentcycle)+"MB");
                 }
 
-                if(!mSDTest) {
-                    emmc_health = testGetEmmcHealthStatusApi();
-                    SendMyMessage(handler, 2, "Emmc health status(after test): "+emmc_health);
-                }
             }
 
             SendMyMessage(handler, 2, " ");
@@ -1235,6 +1225,9 @@ public class MainActivity extends Activity {
 			bufW[i] = str.charAt(number);
 		}
         Currentcycle = 0;
+        if(!mSDTest) {
+            emmc_health = testGetEmmcHealthStatusApi();
+        }
 		while (!bStop && marktime2 - marktime1 <= Flashtesttimenum * 60000) {
             Currentcycle++;
             SendMyMessage(handler, 2, "\n#############Cycle:"+ Currentcycle + "#############");
@@ -1309,6 +1302,11 @@ public class MainActivity extends Activity {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+            if(!mSDTest) {
+                SendMyMessage(handler, 2, "Emmc health status(before test): "+emmc_health);
+                emmc_health = testGetEmmcHealthStatusApi();
+                SendMyMessage(handler, 2, "Emmc health status(after test): "+emmc_health);
+            }
 		}
 
 		if (bReturn) {
