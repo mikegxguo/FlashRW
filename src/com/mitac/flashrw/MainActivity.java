@@ -480,20 +480,6 @@ public class MainActivity extends Activity {
             if(mReliabilityTest) {
                 SendMyMessage(handler, 2, " ");
                 RunStep3();
-
-                Currentcycle = 30*Currentcycle;
-                if(Currentcycle>1024) {
-                    Currentcycle = Currentcycle/1024;
-                    if(Currentcycle>1024) {
-                        Currentcycle = Currentcycle/1024;
-                        SendMyMessage(handler, 2, "Total data written:"+Integer.toString(Currentcycle)+"TB");
-                    } else {
-                        SendMyMessage(handler, 2, "Total data written:"+Integer.toString(Currentcycle)+"GB");
-                    }
-                } else {
-                    SendMyMessage(handler, 2, "Total data written:"+Integer.toString(Currentcycle)+"MB");
-                }
-
             }
 
             SendMyMessage(handler, 2, " ");
@@ -1211,6 +1197,7 @@ public class MainActivity extends Activity {
 		int length = 3 * 1024 * 1024;
 		int fileCount = 10;
 		boolean bReturn = true;
+        int total = 0;
 
 		Flashtesttimenum = Integer.parseInt(FlashtesttimeEdit.getText()
 				.toString());
@@ -1302,6 +1289,20 @@ public class MainActivity extends Activity {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+            //print the total data written in every test cycle
+            total = 30*Currentcycle;
+            if(total>1024) {
+                total = total/1024;
+                if(total>1024) {
+                    total = total/1024;
+                    SendMyMessage(handler, 2, "Total data written:"+Integer.toString(total)+"TB");
+                } else {
+                    SendMyMessage(handler, 2, "Total data written:"+Integer.toString(total)+"GB");
+                }
+            } else {
+                SendMyMessage(handler, 2, "Total data written:"+Integer.toString(total)+"MB");
+            }
+
             if(!mSDTest) {
                 SendMyMessage(handler, 2, "Emmc health status(before test): "+emmc_health);
                 emmc_health = testGetEmmcHealthStatusApi();
