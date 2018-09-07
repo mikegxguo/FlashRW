@@ -1293,12 +1293,12 @@ public class MainActivity extends Activity {
             total = 30*Currentcycle;
             if(total>1024) {
                 total = total/1024;
-                if(total>1024) {
-                    total = total/1024;
-                    SendMyMessage(handler, 2, "Total data written:"+Integer.toString(total)+"TB");
-                } else {
+                //if(total>1024) {
+                //    total = total/1024;
+                //    SendMyMessage(handler, 2, "Total data written:"+Integer.toString(total)+"TB");
+                //} else {
                     SendMyMessage(handler, 2, "Total data written:"+Integer.toString(total)+"GB");
-                }
+                //}
             } else {
                 SendMyMessage(handler, 2, "Total data written:"+Integer.toString(total)+"MB");
             }
