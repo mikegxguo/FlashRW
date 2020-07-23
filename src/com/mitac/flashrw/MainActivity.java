@@ -5,9 +5,13 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.OutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Random;
 import java.util.Timer;
 import java.nio.charset.Charset;
@@ -19,6 +23,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.SystemClock;
+import android.os.Environment;
+import android.os.StatFs;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -35,6 +41,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.Toast;
 import android.content.Context;
+import android.net.Uri;
 
 import android.os.storage.StorageManager;
 import android.os.storage.StorageVolume;
@@ -106,6 +113,7 @@ public class MainActivity extends Activity {
     private boolean mServiceReady = false;
     private int emmc_health = -1;
     private boolean mSDTest = false;
+    private static final String TIME_STAMP_NAME = "_yyyyMMdd_HHmmss_";
 
     private void initSystemApiClient() {
         if (mSystemApiClient == null) {
@@ -141,15 +149,15 @@ public class MainActivity extends Activity {
         //boolean isSuccess = false;
         int value = -1;
 
-        try {
-            EmmcProperties.init(mSystemApiClient);
-            value = EmmcProperties.getEmmcHealthStatus();
-            //isSuccess = true;
-        } catch (EmmcPropertiesException e) {
-            e.printStackTrace();
-        } catch (SystemApiClientException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            EmmcProperties.init(mSystemApiClient);
+//            value = EmmcProperties.getEmmcHealthStatus();
+//            //isSuccess = true;
+//        } catch (EmmcPropertiesException e) {
+//            e.printStackTrace();
+//        } catch (SystemApiClientException e) {
+//            e.printStackTrace();
+//        }
         //updateTexViewUiResult(mEmmcHealthTextView,
         //        ResUtils.getResString(this, R.string.emmc_health),
         //        Integer.toString(value));
@@ -270,8 +278,25 @@ public class MainActivity extends Activity {
                 }
             }
         });
-
 	}
+
+
+  private void showOpenDocumentTree() {
+      Intent intent = null;
+      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+          mStorageManager = StorageManager.from(mContext);
+          StorageVolume volume = mStorageManager.getStorageVolume(new File(external_sdcard_path));
+          if (volume != null) {
+              intent = volume.createAccessIntent(null);
+          }
+      }
+      if (intent == null) {
+          intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+      }
+      startActivityForResult(intent, DocumentsUtils.OPEN_DOCUMENT_TREE_CODE);
+  }
+
+
 
     @Override
     protected void onResume() {
@@ -412,6 +437,17 @@ public class MainActivity extends Activity {
             SelectPath(external_sdcard_path);
             mSDTest = true;
 
+            if (DocumentsUtils.checkWritableRootPath(MainActivity.this, external_sdcard_path)) {
+                showOpenDocumentTree();
+                return;
+            }
+
+//            try {
+//                writeDataToSD();
+//            } catch (IOException e) {
+//                //do nothing
+//            }
+
             cyclenum = Integer.parseInt(CyclenumEdit.getText().toString());
             mBasicTest = box1_basic.isChecked();
             mPerformanceTest = box1_performance.isChecked();
@@ -427,6 +463,53 @@ public class MainActivity extends Activity {
                 mAllTestThread.start();
             }
         }
+    }
+
+    public  void writeDataToSD() throws IOException {
+        String  str = "just a test\n";
+        String strRead = "";
+        String  sdkOut = external_sdcard_path;//getStoragePath(this,true);  //get root path of external SD
+
+        String  filePath = sdkOut + "/test";
+        Log.i(TAG,"lum_ sdkOut: " + filePath);
+        File file = new File(filePath);
+        if (!file.exists()){
+            file.mkdirs();
+            Log.i(TAG,"create folder: " + filePath);
+        }
+
+        String  fileWritePath = filePath + "/test.txt";
+        File fileWrite = new File(fileWritePath);
+        Log.i(TAG,"lum: prepare to write" );
+        try {
+            OutputStream outputStream = DocumentsUtils.getOutputStream(this,fileWrite);
+            //  OutputStream outputStream = new FileOutputStream(fileWrite);
+            outputStream.write(str.getBytes());
+            outputStream.close();
+            Log.i(TAG,"lum write successfully" );
+            Toast.makeText(this,"path: " + fileWritePath + " successfully ",Toast.LENGTH_SHORT ).show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.i(TAG,"lum fail to write" );
+            Toast.makeText(this,"path: " + fileWritePath + "falure",Toast.LENGTH_SHORT ).show();
+        }
+
+        try {
+            InputStream is = DocumentsUtils.getInputStream(this,fileWrite);
+            InputStreamReader input = new InputStreamReader(is, "UTF-8");
+            BufferedReader reader = new BufferedReader(input);
+            while ((str = reader.readLine()) != null) {
+                strRead  +=  str;
+            }
+            Log.i(TAG,"lum: " +  strRead);
+        } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
     }
 
 	void SendMyMessage(Handler msghandler, int type, String msg) {
@@ -1078,12 +1161,39 @@ public class MainActivity extends Activity {
 					temp = new File(path + File.separator + tempList[i]);
 				}
 
-				if (temp.isFile()) {
-					temp.delete();
-				}
+        if (temp.isFile()) {
+            if(!mSDTest) {
+                temp.delete();
+            } else {
+                boolean ret = DocumentsUtils.delete(MainActivity.this, temp);
+                Log.i(TAG, "delete: "+ret);
+            }
+        } //if(temp.isFile())
 			}
 		}
 
+    public void delSpecialFiles(String path, int min) {
+        Date date = new Date(System.currentTimeMillis() - 1000*60*min);
+        File folder = new File(path);
+        if (!folder.exists()) {
+            return;
+        }
+        if (!folder.isDirectory()) {
+            return;
+        }
+        File[] files = folder.listFiles();
+        for (int i=0; i<files.length; i++){
+            File file = files[i];
+            if (new Date(file.lastModified()).before(date)){
+                if(!mSDTest) {
+                    file.delete();
+                } else {
+                    boolean ret = DocumentsUtils.delete(MainActivity.this, file);
+                    Log.i(TAG, "delete: "+ret);
+                }
+            }
+        }
+    }
 //======================================================================================
 //======================================================================================
 //======================================================================================
@@ -1184,6 +1294,30 @@ public class MainActivity extends Activity {
             SendMyMessage(handler, 2, "====R/W Basic Test end");
 		}
 
+    private boolean hasSpaceForSize(long size) {
+        String state = Environment.getExternalStorageState();
+        if (!Environment.MEDIA_MOUNTED.equals(state)) {
+            return false;
+        }
+
+        String path = null;
+        if(mSDTest) {
+            path = external_sdcard_path;
+        } else {
+            //path = "/mnt/sdcard"; // path:/storage/emulated/0
+            path = Environment.getExternalStorageDirectory().getPath();
+        }
+        //SendMyMessage(handler, 2, "hasSpaceForSize: "+path);
+        try {
+            StatFs stat = new StatFs(path);
+            long space = stat.getAvailableBlocks() * (long) stat.getBlockSize()/(1024*1024);
+            SendMyMessage(handler, 2, "hasSpaceForSize: "+space+"M");
+            return space > size;
+        } catch (Exception e) {
+            Log.i(TAG, "Fail to access external storage", e);
+        }
+        return false;
+    }
 
 
 	private void RunStep3() {
@@ -1194,47 +1328,63 @@ public class MainActivity extends Activity {
 		Random random;
 		char bufW[];
 		char bufR[];
-		int length = 3 * 1024 * 1024;
+		int length = 3 * 1024 * 1024;//FIXME
 		int fileCount = 10;
 		boolean bReturn = true;
-        int total = 0;
+    int total = 0;
 
-		Flashtesttimenum = Integer.parseInt(FlashtesttimeEdit.getText()
-				.toString());
+		Flashtesttimenum = Integer.parseInt(FlashtesttimeEdit.getText().toString());
 		SendMyMessage(handler, 2, "====R/W Reliability Test start");
 		long marktime1 = SystemClock.uptimeMillis();
 		long marktime2 = 0;
 		random = new Random();
 		bufW = new char[length];
+    bufR = new char[length+10];
 		SendMyMessage(handler, 2, "Create temp 3M buf.");
 		for (int i = 0; i < length; ++i) {
 			int number = random.nextInt(62);// [0,62)
 			bufW[i] = str.charAt(number);
 		}
-        Currentcycle = 0;
-        if(!mSDTest) {
-            emmc_health = testGetEmmcHealthStatusApi();
-        }
-		while (!bStop && marktime2 - marktime1 <= Flashtesttimenum * 60000) {
-            Currentcycle++;
-            SendMyMessage(handler, 2, "\n#############Cycle:"+ Currentcycle + "#############");
-            SendMyMessage(handler, 2, " ");
+    //Log.i(TAG, "bufW "+bufW[0]+" "+bufW[1]+" "+bufW[2]+" "+bufW[3]);
+    Currentcycle = 0;
+    if(!mSDTest) {
+        emmc_health = testGetEmmcHealthStatusApi();
+    }
+    while (!bStop && marktime2 - marktime1 <= Flashtesttimenum * 60000) {
+        Currentcycle++;
+        SendMyMessage(handler, 2, "\n#############Cycle:"+ Currentcycle + "#############");
+        SendMyMessage(handler, 2, " ");
 
 			marktime2 = SystemClock.uptimeMillis();
 			try {
+        String filename = new SimpleDateFormat(TIME_STAMP_NAME).format(new Date(System.currentTimeMillis()));
+        // write 10 files, and each file has 3M random data
 				for (int i = 0; i < fileCount; i++) {
-					String TestFileName = "Reliability" + Integer.toString(i)
-							+ ".txt";
+					String TestFileName = "Reliability" + filename + Integer.toString(i) + ".txt";
 					testFilePath = ReliabilityPath + TestFileName;
-					fileW = new FileWriter(testFilePath);
-
-					Log.d("My App", testFilePath);
-
-					SendMyMessage(handler, 2, "Begin writing " + TestFileName);
-
-					fileW.write(bufW);
-					fileW.close();
-				}
+          SendMyMessage(handler, 2, "Begin writing " + TestFileName);
+          if(!mSDTest) {
+              fileW = new FileWriter(testFilePath);
+              //Log.d("My App", testFilePath);
+              fileW.write(bufW);
+              fileW.close();
+          } else {
+              try {
+                  File fileWrite = new File(testFilePath);
+                  OutputStream outputStream = DocumentsUtils.getOutputStream(MainActivity.this,fileWrite);
+                  outputStream.write(new String(bufW).getBytes("UTF-8"));
+                  outputStream.close();
+                  byte[] temp = new String(bufW).getBytes("UTF-8");
+                  //Log.i(TAG, "bufW "+temp[0]+" "+temp[1]+" "+temp[2]+" "+temp[3]);
+                  //Log.i(TAG,"write successfully" );
+                  //Toast.makeText(this,"path: " + testFilePath + " successfully ",Toast.LENGTH_SHORT ).show();
+              } catch (IOException e) {
+                  e.printStackTrace();
+                  Log.i(TAG,"fail to write" );
+                  //Toast.makeText(this,"path: " + testFilePath + "falure",Toast.LENGTH_SHORT ).show();
+              }
+          }
+        }
 
 				if (bStop) {
 					SendMyMessage(handler, 2, "Stopped");
@@ -1248,25 +1398,47 @@ public class MainActivity extends Activity {
 						return;
 					}
 
-					String TestFileName = "Reliability" + Integer.toString(i)
-							+ ".txt";
+					String TestFileName = "Reliability" + filename + Integer.toString(i)+ ".txt";
 					testFilePath = ReliabilityPath + TestFileName;
-
-					fileR = new FileReader(testFilePath);
-					bufR = new char[length + 10];
-
-					SendMyMessage(handler, 2, "Begin reading " + testFilePath);
-
-					int iRead = fileR.read(bufR);
-					fileR.close();
+          //bufR = new char[length + 10];
+          SendMyMessage(handler, 2, "Begin reading " + testFilePath);
+          int iRead = 0;
+          String tmp;
+          String strRead = "";
+          if(!mSDTest) {
+              fileR = new FileReader(testFilePath);
+              iRead = fileR.read(bufR);
+              fileR.close();
+          } else {
+              try {
+                  File fileRead = new File(testFilePath);
+                  InputStream is = DocumentsUtils.getInputStream(MainActivity.this,fileRead);
+                  InputStreamReader input = new InputStreamReader(is, "UTF-8");
+                  BufferedReader reader = new BufferedReader(input);
+                  while ((tmp = reader.readLine()) != null) {
+                      strRead  +=  tmp;
+                  }
+                  //Log.i(TAG, "strRead: "+strRead);
+                  char[] chr = strRead.toCharArray();
+                  iRead = strRead.length();
+                  for(int j = 0; j < length; ++j) {
+                      bufR[j] = chr[j];
+                  }
+                  //Log.i(TAG, "Read: "+iRead);
+                  //Log.i(TAG, "bufR "+bufR[0]+" "+bufR[1]+" "+bufR[2]+" "+bufR[3]);
+              } catch (FileNotFoundException e) {
+                  // TODO Auto-generated catch block
+                  e.printStackTrace();
+              } catch (IOException e) {
+                  // TODO Auto-generated catch block
+                  e.printStackTrace();
+              }
+          }
 					if (iRead != length) {
-						SendMyMessage(handler, 2, "The length of file "
-								+ Integer.toString(i) + " isn't correct.");
-
+						SendMyMessage(handler, 2, "The length of file "	+ Integer.toString(i) + " isn't correct.");
 						bReturn = false;
 					} else {
-						SendMyMessage(handler, 2, "The length of file "
-								+ Integer.toString(i) + " is correct.");
+						SendMyMessage(handler, 2, "The length of file "	+ Integer.toString(i) + " is correct.");
 					}
 					boolean bSame = true;
 					for (int j = 0; j < length; ++j) {
@@ -1276,38 +1448,47 @@ public class MainActivity extends Activity {
 					}
 
 					if (bSame) {
-						SendMyMessage(handler, 2,
-								"The file " + Integer.toString(i)
-										+ " is correct.");
+						SendMyMessage(handler, 2,	"The file " + Integer.toString(i)	+ " is correct.");
 					} else {
-						SendMyMessage(handler, 2,
-								"The file " + Integer.toString(i)
-										+ " isn't correct.");
+						SendMyMessage(handler, 2,	"The file " + Integer.toString(i) + " isn't correct.");
 						bReturn = false;
 					}
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
+        bStop = true; //FIXME
 			}
-            //print the total data written in every test cycle
-            total = 30*Currentcycle;
-            if(total>1024) {
-                total = total/1024;
-                if(total>1024) {
-                    total = total/1024;
-                    SendMyMessage(handler, 2, "Total data written:"+Integer.toString(total)+"TB");
-                } else {
-                    SendMyMessage(handler, 2, "Total data written:"+Integer.toString(total)+"GB");
-                }
-            } else {
-                SendMyMessage(handler, 2, "Total data written:"+Integer.toString(total)+"MB");
-            }
 
-            if(!mSDTest) {
-                SendMyMessage(handler, 2, "Emmc health status(before test): "+emmc_health);
-                emmc_health = testGetEmmcHealthStatusApi();
-                SendMyMessage(handler, 2, "Emmc health status(after test): "+emmc_health);
-            }
+      //print the total data written in every test cycle
+      total = 30*Currentcycle;
+      if(total>1024) {
+          total = total/1024;
+          if(total>1024) {
+              total = total/1024;
+              SendMyMessage(handler, 2, "Total data written:"+Integer.toString(total)+"TB");
+          } else {
+              SendMyMessage(handler, 2, "Total data written:"+Integer.toString(total)+"GB");
+          }
+      } else {
+          SendMyMessage(handler, 2, "Total data written:"+Integer.toString(total)+"MB");
+      }
+
+      if(!mSDTest) {
+          SendMyMessage(handler, 2, "Emmc health status(before test): "+emmc_health);
+          emmc_health = testGetEmmcHealthStatusApi();
+          SendMyMessage(handler, 2, "Emmc health status(after test): "+emmc_health);
+      }
+      if(hasSpaceForSize(500) == false) {
+          //If less than 500M, delete some files(1G)
+          if(!mSDTest) {
+              //FIXME
+              //Internal FLash: ~8G
+              //There is no enough space to write data for 7 minutes
+              delSpecialFiles(ReliabilityPath, 4);
+          } else {
+              bStop = true;//FIXME
+          }
+      }
 		}
 
 		if (bReturn) {
@@ -1371,6 +1552,14 @@ public class MainActivity extends Activity {
 	}
 
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+      if(requestCode == DocumentsUtils.OPEN_DOCUMENT_TREE_CODE) {
+          if (data != null && data.getData() != null) {
+              Uri uri = data.getData();
+              DocumentsUtils.saveTreeUri(MainActivity.this, external_sdcard_path, uri);
+          }
+          return;
+      }
+
 		if (FlashPATH_RESULT_CODE == resultCode) {
 			Bundle bundle = null;
 			if (data != null && (bundle = data.getExtras()) != null) {
