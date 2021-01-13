@@ -20,5 +20,6 @@
     <string name="reliability_test">R/W Reliability Test</string>
     <string name="flash_test">FlashTest</string>
     <string name="sd_test">SDTest</string>
+    <string name="ud_test">UDiskTest</string>
 
 </resources>

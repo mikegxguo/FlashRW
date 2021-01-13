@@ -17,6 +17,8 @@ import java.util.Timer;
 import java.nio.charset.Charset;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
+import java.util.List;
+import java.lang.reflect.Method;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -90,10 +92,10 @@ public class MainActivity extends Activity {
 	private Handler handler;
 	public String LogfilePath;
 	public String strSystemTime;
-	//private Button m_btnstart = null;
 	private Button m_btnstop = null;
-    private Button m_btnflash = null;
-    private Button m_btnsd = null;
+  private Button m_btnflash = null;
+  private Button m_btnsd = null;
+  private Button m_btnud = null;
 	private char bufW[];
 	private char bufR[];
 
@@ -210,11 +212,11 @@ public class MainActivity extends Activity {
 						TestResult = "";
 					}
 
-					//m_btnstart.setEnabled(true);
-                    m_btnflash.setEnabled(true);
-                    m_btnsd.setEnabled(true);
+          m_btnflash.setEnabled(true);
+          m_btnsd.setEnabled(true);
+          m_btnud.setEnabled(true);
 					m_btnstop.setEnabled(false);
-                    bStop = false;
+          bStop = false;
 
 				}
 			}
@@ -224,15 +226,14 @@ public class MainActivity extends Activity {
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
 				WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-		//m_btnstart = (Button) findViewById(R.id.btn_start);
 		m_btnstop = (Button) findViewById(R.id.btn_stop);
-        m_btnflash = (Button) findViewById(R.id.btn_flash);
-        m_btnsd = (Button) findViewById(R.id.btn_sd);
-		//m_btnstart.setEnabled(true);
-        m_btnflash.setEnabled(true);
-        m_btnsd.setEnabled(true);
+    m_btnflash = (Button) findViewById(R.id.btn_flash);
+    m_btnsd = (Button) findViewById(R.id.btn_sd);
+    m_btnud = (Button) findViewById(R.id.btn_ud);
+    m_btnflash.setEnabled(true);
+    m_btnsd.setEnabled(true);
+    m_btnud.setEnabled(true);
 		m_btnstop.setEnabled(false);
-        //m_btnstart.setVisibility(View.INVISIBLE);
 
 		mTextView01 = (TextView) findViewById(R.id.myTextView01);
 		myScrollView = (ScrollView) findViewById(R.id.scrollView1);
@@ -240,9 +241,9 @@ public class MainActivity extends Activity {
 		CyclenumEdit = (EditText) findViewById(R.id.cyclenumber);
 		FlashtesttimeEdit = (EditText) findViewById(R.id.testtimenumber);
 
-		//m_btnstart.setOnClickListener(new StartTest());
-        m_btnflash.setOnClickListener(new FlashTest());
-        m_btnsd.setOnClickListener(new SDTest());
+    m_btnflash.setOnClickListener(new FlashTest());
+    m_btnsd.setOnClickListener(new SDTest());
+    m_btnud.setOnClickListener(new UsbDiskTest());
 		m_btnstop.setOnClickListener(new StopTest());
 
         box1_basic = (CheckBox) findViewById(R.id.box1_basic);
@@ -336,9 +337,9 @@ public class MainActivity extends Activity {
 
 
 			if (RunningTest == -1 && mAllTestThread == null) {
-				//m_btnstart.setEnabled(false);
-                m_btnflash.setEnabled(false);
-                m_btnsd.setEnabled(false);
+        m_btnflash.setEnabled(false);
+        m_btnsd.setEnabled(false);
+        m_btnud.setEnabled(false);
 				m_btnstop.setEnabled(true);
 				RunningTest = 1;
 				mAllTestThread = new RunAlltestThead();
@@ -387,9 +388,9 @@ public class MainActivity extends Activity {
             mReliabilityTest = box1_reliability.isChecked();
 
             if (RunningTest == -1 && mAllTestThread == null) {
-                //m_btnstart.setEnabled(false);
                 m_btnflash.setEnabled(false);
                 m_btnsd.setEnabled(false);
+                m_btnud.setEnabled(false);
                 m_btnstop.setEnabled(true);
                 RunningTest = 1;
                 mAllTestThread = new RunAlltestThead();
@@ -418,6 +419,32 @@ public class MainActivity extends Activity {
         }
     }
 
+    void GetUsbDiskPath() {
+        StorageManager mStorageManager = (StorageManager) mContext.getSystemService(Context.STORAGE_SERVICE);
+        List<StorageVolume> volumes = mStorageManager.getStorageVolumes();
+        try {
+            Class<?> storageVolumeClazz = Class.forName("android.os.storage.StorageVolume");
+            Method getPath = storageVolumeClazz.getMethod("getPath");
+            Method isRemovable = storageVolumeClazz.getMethod("isRemovable");
+            Method getUserLabel = storageVolumeClazz.getMethod("getUserLabel");
+            for (int i = 0; i < volumes.size(); i++) {
+                StorageVolume storageVolume = volumes.get(i);
+                String storagePath = (String) getPath.invoke(storageVolume);
+                boolean isRemovableResult = (boolean) isRemovable.invoke(storageVolume);
+                String label = (String) getUserLabel.invoke(storageVolume);
+                //String description = storageVolume.getDescription(mContext);
+                //if ("USB".equals(label)){
+                if(storagePath.contains("media_rw")) { //FIXME
+                    external_sdcard_path = storagePath;
+                    break;
+                }
+                Log.d("Storage","GetUsbDiskPath--"+ " i=" + i + " ,storagePath=" + storagePath +  " ,description=" + label);
+            }
+            } catch (Exception e) {
+                Log.d("Storage","GetUsbDiskPath--" + " e:" + e);
+            }
+        }
+
     public class SDTest implements OnClickListener {
         public void onClick(View v) {
             if (CyclenumEdit.getText().toString().equals("") == true) {
@@ -427,6 +454,7 @@ public class MainActivity extends Activity {
                 return;
             }
 
+            external_sdcard_path = "";
             GetExternalSDPath();
             if(external_sdcard_path.equals("") == true) {
                 Toast.makeText(MainActivity.this,
@@ -454,9 +482,51 @@ public class MainActivity extends Activity {
             mReliabilityTest = box1_reliability.isChecked();
 
             if (RunningTest == -1 && mAllTestThread == null) {
-                //m_btnstart.setEnabled(false);
                 m_btnflash.setEnabled(false);
                 m_btnsd.setEnabled(false);
+                m_btnud.setEnabled(false);
+                m_btnstop.setEnabled(true);
+                RunningTest = 1;
+                mAllTestThread = new RunAlltestThead();
+                mAllTestThread.start();
+            }
+        }
+    }
+
+    public class UsbDiskTest implements OnClickListener {
+        public void onClick(View v) {
+            if (CyclenumEdit.getText().toString().equals("") == true) {
+                Toast.makeText(MainActivity.this,
+                        "Please input cycle number!!!", Toast.LENGTH_LONG)
+                    .show();
+                return;
+            }
+
+            external_sdcard_path = "";
+            GetUsbDiskPath();
+            if(external_sdcard_path.equals("") == true) {
+                Toast.makeText(MainActivity.this,
+                        "Please insert USB disk!!!", Toast.LENGTH_LONG)
+                    .show();
+                return;
+            }
+            SelectPath(external_sdcard_path);
+            mSDTest = true;
+
+            if (DocumentsUtils.checkWritableRootPath(MainActivity.this, external_sdcard_path)) {
+                showOpenDocumentTree();
+                return;
+            }
+
+            cyclenum = Integer.parseInt(CyclenumEdit.getText().toString());
+            mBasicTest = box1_basic.isChecked();
+            mPerformanceTest = box1_performance.isChecked();
+            mReliabilityTest = box1_reliability.isChecked();
+
+            if (RunningTest == -1 && mAllTestThread == null) {
+                m_btnflash.setEnabled(false);
+                m_btnsd.setEnabled(false);
+                m_btnud.setEnabled(false);
                 m_btnstop.setEnabled(true);
                 RunningTest = 1;
                 mAllTestThread = new RunAlltestThead();

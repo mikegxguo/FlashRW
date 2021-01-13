@@ -129,12 +129,21 @@
         android:text="@string/sd_test" />
 
     <Button
-        android:id="@+id/btn_stop"
+        android:id="@+id/btn_ud"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/testtimenumber"
         android:layout_above="@+id/scrollView1"
         android:layout_toRightOf="@+id/btn_sd"
+        android:text="@string/ud_test" />
+
+    <Button
+        android:id="@+id/btn_stop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/testtimenumber"
+        android:layout_above="@+id/scrollView1"
+        android:layout_toRightOf="@+id/btn_ud"
         android:text="@string/stop" />
 
     <!-- Button
